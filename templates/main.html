@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Tutor</title>  
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">Math Tutor</h1>
+        <div class="sidebar">
+            <h3>Select a Topic</h3>
+            <ul id="topic-list">
+                <li onclick="fetchData('real_numbers')">Real Numbers</li>
+                <li onclick="fetchData('order_of_operations')">Order of Operations</li>
+                <li onclick="fetchData('absolute_value')">Absolute Value</li>
+                <li onclick="fetchData('exponents')">Exponents</li>
+                <li onclick="fetchData('linear_equations')">Linear Equations</li>
+                <li onclick="fetchData('graphing_lines')">Graphing Lines</li>
+                <li onclick="fetchData('inequalities')">Inequalities</li>
+                <li onclick="fetchData('scientific_notation')">Scientific Notation</li>
+                <li onclick="fetchData('polynomials')">Polynomials</li>
+                <li onclick="fetchData('factoring')">Factoring</li>
+            </ul>
+        </div>
+
+        <div class="definition-container">
+            <h3>Definition</h3>
+            <p id="definition"></p>
+        </div>
+
+        <div class="example-container">
+            <h3>Example Problem</h3>
+            <p id="example">Select a topic to get an example problem.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
