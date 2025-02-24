@@ -1,0 +1,10 @@
+AI instructions.
+
+QUESTION:
+{user_input}
+
+SAMPLE_PROBLEMS
+{problem_templates}
+
+COURSE_MATERIALS
+{documents}
