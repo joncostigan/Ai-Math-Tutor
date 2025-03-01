@@ -18,7 +18,8 @@ import java.util.List;
 @RestController
 public class ChatController {
 
-    
+    private static final int TOP_K = 5;
+    private static final double SIMILARITY_THRESHOLD = .7;
     @Value("classpath:/documents/prompts/prompt-template.txt")
     private Resource topic1PromptTemplate;
     private final ChatClient chatClient;
@@ -43,6 +44,22 @@ public class ChatController {
      * @param usermessage  the text provided by the user
      * @return the chat client's response or an error message
      */
-   
+    @GetMapping("/chat")
+    public String chat(@RequestParam(value = "topic") String topic,
+                       @RequestParam(value = "usermessage", defaultValue = "Generate just a word problem for x+5=7 involving animals") String usermessage) {
+        try {
+            List<Document> searchResults = vectorStore.similaritySearch(
+                    SearchRequest.builder()
+                            .query(topic + " " + usermessage)
+                            .topK(TOP_K)
+                            .similarityThreshold(SIMILARITY_THRESHOLD)
+                            .build());
+            return chatClient.prompt()
+                    .user(usermessage)
+                    .call()
+                    .content();
+        } catch (Exception e) {
+            return "I'm sorry, I'm experiencing technical difficulties right now. Please try again later.";
+        }
     }
 }
