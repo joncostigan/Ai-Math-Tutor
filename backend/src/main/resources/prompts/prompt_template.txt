@@ -1,0 +1,13 @@
+AI instructions.
+
+TOPIC
+{topic}
+
+USER_INPUT:
+{user_input}
+
+RELEVENT_COURSE_MATERIALS
+{documents}
+
+POTENTIAL_SAMPLE_PROBLEMS
+{problem_templates}

@@ -1,7 +1,6 @@
 package com.baezcostiganreed.mathtutorapp;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ChatController {
 
-    @Value("classpath:/documents/prompts/topic1.txt")
+    @Value("classpath:/documents/prompts/prompt-template.txt")
     private Resource topic1PromptTemplate;
     private final ChatClient chatClient;
     @Autowired
@@ -40,8 +39,9 @@ public class ChatController {
      * @param usermessage  the text provided by the user
      * @return the chat client's response or an error message
      */
-    @GetMapping("/topic1")
-    public String topic1(@RequestParam(value = "usermessage", defaultValue = "Generate just a word problem for x+5=7 involving animals") String usermessage) {
+    @GetMapping("/chat")
+    public String chat(@RequestParam(value = "topic") String topic,
+                       @RequestParam(value = "usermessage", defaultValue = "Generate just a word problem for x+5=7 involving animals") String usermessage) {
         try {
             return chatClient.prompt()
                     .user(usermessage)
