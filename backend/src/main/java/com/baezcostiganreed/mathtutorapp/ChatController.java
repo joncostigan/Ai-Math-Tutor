@@ -27,7 +27,7 @@ public class ChatController {
     private final PgVectorStore vectorStore;
 
     /**
-     * Constructs a new controller with a chat client and a vector store.
+     * Constructs a new controller with a chat client and a vector store.kk
      *
      * @param chatClientBuilder  builds and configures the ChatClient
      * @param vectorStore        the vector store used for vector operations
@@ -45,7 +45,7 @@ public class ChatController {
      * @return the chat client's response or an error message
      */
     @GetMapping("/chat")
-    public String chat(@RequestParam(value = "topic") String topic,
+    public String chat(@RequestParam(value = "topic", defaultValue = "Integers") String topic,
                        @RequestParam(value = "usermessage", defaultValue = "Generate just a word problem for x+5=7 involving animals") String usermessage) {
         try {
             List<Document> searchResults = vectorStore.similaritySearch(
@@ -53,6 +53,7 @@ public class ChatController {
                             .query(topic + " " + usermessage)
                             .topK(TOP_K)
                             .similarityThreshold(SIMILARITY_THRESHOLD)
+                            .filterExpression("metadata->>'page_number' < '10' && metadata->>'page_number' > '5' && metadata->>'file_name' = 'Prealgebra2e-WEB-0qbw93r.pdf'")
                             .build());
             return chatClient.prompt()
                     .user(usermessage)
