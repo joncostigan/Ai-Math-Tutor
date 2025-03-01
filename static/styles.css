@@ -157,7 +157,7 @@ body {
 
 /* 📌 Chat Box Styling (Embedded in Example Column) */
 .chat-box {
-    height: 200px; /* Sets a fixed height of 200px for the chat box */
+    height: 380px; /* Sets a fixed height of 200px for the chat box */
     overflow-y: auto; /* Enables vertical scrolling if chat messages overflow */
     padding: 10px; /* Adds 10px padding inside the chat box for spacing */
     display: flex; /* Uses flexbox to layout chat messages */
@@ -224,3 +224,10 @@ body {
     border-radius: 5px; /* Rounds the corners of the button */
     cursor: pointer; /* Changes the cursor to a pointer when hovering over the button */
 }
+
+.chat-container h3 {
+    text-align: center;    /* Centers the heading horizontally */
+    color: white;          /* (Optional) Make the text white if desired */
+    margin-bottom: 10px;   /* (Optional) Adds some space below the heading */
+}
+
