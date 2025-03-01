@@ -1,6 +1,8 @@
 package com.baezcostiganreed.mathtutorapp;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +10,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * Provides REST endpoints to interact with a chat client.
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ChatController {
 
+    private static final int TOP_K = 5;
+    private static final double SIMILARITY_THRESHOLD = .7;
     @Value("classpath:/documents/prompts/prompt-template.txt")
     private Resource topic1PromptTemplate;
     private final ChatClient chatClient;
@@ -43,6 +48,12 @@ public class ChatController {
     public String chat(@RequestParam(value = "topic") String topic,
                        @RequestParam(value = "usermessage", defaultValue = "Generate just a word problem for x+5=7 involving animals") String usermessage) {
         try {
+            List<Document> searchResults = vectorStore.similaritySearch(
+                    SearchRequest.builder()
+                            .query(topic + " " + usermessage)
+                            .topK(TOP_K)
+                            .similarityThreshold(SIMILARITY_THRESHOLD)
+                            .build());
             return chatClient.prompt()
                     .user(usermessage)
                     .call()
