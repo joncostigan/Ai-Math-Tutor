@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 public class ChatController {
-    private static final int TOP_K = 6;
+    private static final int TOP_K = 3;
     private static final double SIMILARITY_THRESHOLD = .6;
     @Value("classpath:/prompts/prompt_template.txt")
     private Resource systemResource;
@@ -75,7 +75,7 @@ public class ChatController {
         try {
             List<Document> chapterResults = vectorStore.similaritySearch(
                     SearchRequest.builder()
-                            .query(topic + " " + usermessage)
+                            .query("Steps to find the solution. How to Solve. " + topic + " " + usermessage)
                             .topK(TOP_K)
                             .similarityThreshold(SIMILARITY_THRESHOLD)
                             .filterExpression(filterExpressionChapter)
@@ -83,7 +83,7 @@ public class ChatController {
 
 
             if (chapterResults != null) {
-                chapterContent = chapterResults.stream().map(Document::getText).collect(Collectors.joining("     "));
+                chapterContent = chapterResults.stream().map(Document::getText).collect(Collectors.joining(" CHAPTER DOCUMENT: "));
             } else {
                 chapterContent = "";
             }
@@ -91,6 +91,7 @@ public class ChatController {
             Message systemMessage = systemPromptTemplate.createMessage(Map.of("topic", topic, "usermessage", usermessage, "chapterContent", chapterContent));
             Prompt prompt =  new Prompt(systemMessage);
             return chatClient.prompt(prompt).call().content();
+
 
         } catch (Exception e) {
             return "I'm sorry, I'm experiencing technical difficulties right now. Please try again later.";
