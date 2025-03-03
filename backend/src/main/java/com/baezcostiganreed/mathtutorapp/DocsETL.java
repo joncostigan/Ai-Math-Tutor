@@ -8,7 +8,6 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -23,7 +22,6 @@ import java.util.List;
  */
 @Component
 public class DocsETL {
-    @Autowired
     private final VectorStore vectorStore;
 
     @Value("classpath:/docs/pdf/*.pdf")
@@ -76,7 +74,7 @@ public class DocsETL {
                         .withNumberOfBottomTextLinesToDelete(0)
                         .withNumberOfTopPagesToSkipBeforeDelete(0)
                         .build())
-                .withPagesPerDocument(1)
+                .withPagesPerDocument(2)
                 .build();
     }
 
@@ -84,10 +82,8 @@ public class DocsETL {
     /**
      * Reads the PDF with pdfReader, chunks and creates vector embeddings with textSplitter, and stores the vector embeddings in the vector store database.
      */
-    private void processPDFAndStoreVectors(Resource pdfResource) {
-        var config = createPdfDocumentReaderConfig();
-        var pdfReader = new PagePdfDocumentReader(pdfResource, config);
-        var textSplitter = new TokenTextSplitter();
+    private void processPDFAndStoreVectors(Resource pdfResource, TokenTextSplitter textSplitter, PdfDocumentReaderConfig config) {
+        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource, config);
         vectorStore.accept(textSplitter.apply(pdfReader.get()));
         logger.info("PDF processing and vector storage completed successfully: " + pdfResource.getFilename());
     }
@@ -96,12 +92,18 @@ public class DocsETL {
      * Initializes the ETL process for the PDF document if the vector store is empty or the document's file name is not in the metadata.
      */
     @PostConstruct
+
     public void init() {
+        PdfDocumentReaderConfig config = createPdfDocumentReaderConfig();
+        new TokenTextSplitter();
+        TokenTextSplitter textSplitter = TokenTextSplitter.builder()
+                .withChunkSize(1500)
+                .build();
         for (Resource pdfResource : pdfResources) {
             if (!isDocumentProcessed(pdfResource.getFilename())) {
 
                 try {
-                    processPDFAndStoreVectors(pdfResource);
+                    processPDFAndStoreVectors(pdfResource, textSplitter, config);
                 } catch (Exception e) {
                     logger.error("Error during processing of document: " + pdfResource.getFilename(), e);
                 }

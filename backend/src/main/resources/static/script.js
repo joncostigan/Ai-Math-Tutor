@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
         displayMessage(userMessage, "user");
 
         // Set the topic value. This could be dynamic based on user selection.
-        const topic = "linear_equations";
+        const topic = "linear equations";
 
         // Updated fetch call to communicate with your backend at /chat
         fetch(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`)
