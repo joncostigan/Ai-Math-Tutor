@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Math Tutor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Plain relative link to styles.css in the same folder -->
+    <!-- Link to CSS file in the same folder -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,14 +17,13 @@
     <div class="sidebar">
         <h3>Select a Topic</h3>
         <ul id="topic-list">
+            <li onclick="fetchData('integers')">Integers</li>
+            <li onclick="fetchData('fractions')">Fractions</li>
+            <li onclick="fetchData('decimals')">Decimals</li>
+            <li onclick="fetchData('percents')">Percents</li>
             <li onclick="fetchData('real_numbers')">Real Numbers</li>
-            <li onclick="fetchData('order_of_operations')">Order of Operations</li>
-            <li onclick="fetchData('absolute_value')">Absolute Value</li>
-            <li onclick="fetchData('exponents')">Exponents</li>
+            <li onclick="fetchData('signed_numbers')">Signed Numbers</li>
             <li onclick="fetchData('linear_equations')">Linear Equations</li>
-            <li onclick="fetchData('graphing_lines')">Graphing Lines</li>
-            <li onclick="fetchData('inequalities')">Inequalities</li>
-            <li onclick="fetchData('scientific_notation')">Scientific Notation</li>
             <li onclick="fetchData('polynomials')">Polynomials</li>
             <li onclick="fetchData('factoring')">Factoring</li>
         </ul>
@@ -36,7 +35,6 @@
         <p id="definition">Select a topic to see the definition.</p>
         <button id="play-audio" onclick="playDefinition()">🔊 Play Audio</button>
         <button id="stop-audio" onclick="stopAudio()">⏹ Stop Audio</button>
-
         <!-- Progress bar for tracking audio playback progress -->
         <div class="audio-progress-container">
             <progress id="audio-progress" value="0" max="100"></progress>
@@ -59,12 +57,11 @@
     </div>
 </div>
 
-<!-- Plain relative script tag for script.js in the same folder -->
+<!-- Link to JavaScript file in the same folder -->
 <script src="script.js"></script>
-
 <!-- (Optional) Marked.js for parsing Markdown content -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<!-- (Optional) MathJax for rendering LaTeX mathematical expressions -->
+<!-- MathJax for rendering LaTeX mathematical expressions -->
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </body>
 </html>

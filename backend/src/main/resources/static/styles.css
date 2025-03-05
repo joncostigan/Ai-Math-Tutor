@@ -227,7 +227,6 @@ body {
 
 .chat-container h3 {
     text-align: center;    /* Centers the heading horizontally */
-    color: white;          /* (Optional) Make the text white if desired */
+    color: black;          /* (Optional) Make the text white if desired */
     margin-bottom: 10px;   /* (Optional) Adds some space below the heading */
 }
-

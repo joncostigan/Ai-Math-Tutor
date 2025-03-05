@@ -11,17 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         const staticDefinitions = {
-            "real_numbers": "Real numbers include all rational and irrational numbers.",
-            "order_of_operations": "The order of operations follows PEMDAS: Parentheses, Exponents, Multiplication & Division (left to right), Addition & Subtraction (left to right).",
-            "absolute_value": "Absolute value represents the distance of a number from zero on the number line.",
-            "exponents": "An exponent refers to the number of times a base number is multiplied by itself.",
-            "linear_equations": "A linear equation is an equation that makes a straight line when graphed.",
-            "graphing_lines": "Graphing lines involves plotting points that satisfy a linear equation on a coordinate plane.",
-            "inequalities": "Inequalities express a range of values that satisfy an equation, using <, >, ≤, or ≥ symbols.",
-            "scientific_notation": "Scientific notation is a way of writing very large or very small numbers using powers of 10.",
-            "polynomials": "A polynomial is an expression consisting of variables, coefficients, and exponents combined using addition, subtraction, and multiplication.",
-            "factoring": "Factoring is breaking down a complex expression into simpler terms that, when multiplied together, give the original expression."
+            "integers": "Whole numbers that can be positive, negative, or zero.",
+            "fractions": "Numbers that show parts of a whole using two numbers.",
+            "decimals": "Numbers with a dot that show parts of a whole.",
+            "percents": "A way to compare a number to 100.",
+            "real_numbers": "All numbers that can be written on a number line.",
+            "signed_numbers": "Numbers that have a plus (+) or minus (-) sign.",
+            "linear_equations": "Math sentences with an equal sign that form a straight line.",
+            "polynomials": "Math expressions with numbers, letters, and exponents.",
+            "factoring": "Breaking a number or expression into smaller parts."
         };
+        // Format the topic key: lowercase and replace spaces with underscores
         const formattedTopic = topic.toLowerCase().replace(/ /g, "_");
         if (staticDefinitions[formattedTopic]) {
             definitionElement.innerText = staticDefinitions[formattedTopic];
@@ -75,26 +75,36 @@ document.addEventListener("DOMContentLoaded", function () {
     window.stopAudio = stopAudio;
 });
 
-// Second DOMContentLoaded event for chat functionality
+// Chat functionality and Markdown fixes
 document.addEventListener("DOMContentLoaded", function () {
     const chatInput = document.getElementById("chatInput");
     const chatBox = document.getElementById("chatBox");
+
+    // Helper function to sanitize math delimiters:
+    // Converts block math delimiters (\[...\]) into inline math (\(...\))
+    function sanitizeMathMessage(text) {
+        return text.replace(/\\\[(.*?)\\\]/g, "\\($1\\)");
+    }
 
     window.sendMessage = function() {
         const userMessage = chatInput.value.trim();
         if (!userMessage) return;
 
-        displayMessage(userMessage, "user");
+        // Sanitize the user message for math delimiters
+        const sanitizedUserMessage = sanitizeMathMessage(userMessage);
+        displayMessage(sanitizedUserMessage, "user");
 
         // Set the topic value. This could be dynamic based on user selection.
         const topic = "linear equations";
 
-        // Updated fetch call to communicate with your backend at /chat
+        // Fetch chat response from the backend
         fetch(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`)
-            .then(response => response.text()) // Adjusted to .text() if backend returns plain text.
+            .then(response => response.text())
             .then(data => {
                 console.log("API Response:", data);
-                displayMessage(data, "bot");
+                // Sanitize the response from the backend
+                const sanitizedData = sanitizeMathMessage(data);
+                displayMessage(sanitizedData, "bot");
             })
             .catch(error => {
                 console.error("Fetch error:", error);
@@ -104,11 +114,25 @@ document.addEventListener("DOMContentLoaded", function () {
         chatInput.value = "";
     };
 
+    // Allow sending a message with the Enter key
+    chatInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
     function displayMessage(message, sender) {
         const messageElement = document.createElement("div");
         messageElement.classList.add("message", sender);
-        messageElement.textContent = message;
+        // Use innerHTML so MathJax can process LaTeX delimiters
+        messageElement.innerHTML = message;
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Trigger MathJax typesetting if it's loaded
+        if (window.MathJax) {
+            window.MathJax.typeset();
+        }
     }
 });
