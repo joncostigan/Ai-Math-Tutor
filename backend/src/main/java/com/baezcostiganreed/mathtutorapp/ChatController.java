@@ -76,6 +76,21 @@ public class ChatController {
             case "real numbers":
                 filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1130 && page_number <= 1144";
                 break;
+            case "signed numbers":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1145 && page_number <= 1220";
+                break;
+            case "decimals":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 881";
+                break;
+            case "percents":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 848 && page_number <= 920";
+                break;
+            case "polynomials":
+                filterExpressionChapter = "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 177 && page_number <= 205";
+                break;
+            case "factoring":
+                filterExpressionChapter = "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 212 && page_number <= 237";
+                break;
         }
         try {
             List<Document> chapterResults = vectorStore.similaritySearch(
