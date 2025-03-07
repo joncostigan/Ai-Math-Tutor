@@ -74,7 +74,7 @@ public class DocsETL {
                         .withNumberOfBottomTextLinesToDelete(0)
                         .withNumberOfTopPagesToSkipBeforeDelete(0)
                         .build())
-                .withPagesPerDocument(2)
+                .withPagesPerDocument(1)
                 .build();
     }
 
@@ -97,10 +97,7 @@ public class DocsETL {
         PdfDocumentReaderConfig config = createPdfDocumentReaderConfig();
         new TokenTextSplitter();
         TokenTextSplitter textSplitter = TokenTextSplitter.builder()
-//                .withMinChunkLengthToEmbed(1000)
                 .withChunkSize(1500)
-//                .withMaxNumChunks(1000)
-//                .withMinChunkSizeChars(500)
                 .build();
         for (Resource pdfResource : pdfResources) {
             if (!isDocumentProcessed(pdfResource.getFilename())) {

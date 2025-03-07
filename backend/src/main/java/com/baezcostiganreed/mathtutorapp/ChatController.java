@@ -65,12 +65,17 @@ public class ChatController {
         String chapterContent = "";
         switch (topic) {
             case "linear equations":
-                filterExpressionChapter = "file_name == 'Prealgebra2e-WEB_0qbw93r.pdf' && page_number >= 601 && page_number <= 647 || file_name == 'ElementaryAlgebra2e-WEB_3zxfu3Z.pdf' && page_number >= 189 && page_number <= 275";
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1249 && page_number <= 1357 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 28 && page_number <= 79";
                 break;
-            case "whole numbers":
-                filterExpressionChapter = "file_name =='Prealgebra2e-WEB_0qbw93r.pdf' && page_number >= 7 && page_number <= 87 || file_name == 'ElementaryAlgebra2e-WEB_3zxfu3Z.pdf' && page_number >= 7 && page_number <= 22";
+            case "fractions":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 400 && page_number <= 645 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 12 && page_number <= 17";
                 break;
-
+            case "integers":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 15 && page_number <= 268 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 7 && page_number <= 9";
+                break;
+            case "real numbers":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1130 && page_number <= 1144";
+                break;
         }
         try {
             List<Document> chapterResults = vectorStore.similaritySearch(
