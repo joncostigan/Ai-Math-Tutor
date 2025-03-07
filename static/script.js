@@ -156,15 +156,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Define a helper function to display a message in the chat box
     function displayMessage(message, sender) {
-        // Create a new div element to hold the message
-        const messageElement = document.createElement("div");
-        // Add the classes "message" and the sender type ("user" or "bot") to style the message
-        messageElement.classList.add("message", sender);
-        // Set the text content of the message element to the provided message
-        messageElement.textContent = message;
-        // Append the message element to the chat box
-        chatBox.appendChild(messageElement);
-        // Scroll the chat box to the bottom so that the latest message is visible
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message", sender);
+
+    // Allow MathJax rendering by using innerHTML instead of textContent
+    messageElement.innerHTML = message;
+
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Re-render MathJax whenever a new message is added
+    MathJax.typesetPromise([messageElement]).catch((err) => console.log("MathJax Error:", err));
+}
+
 });

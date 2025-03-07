@@ -1,6 +1,5 @@
 <!-- Defines the document type and version of HTML -->
 <!DOCTYPE html>
-<!-- Root element of the HTML document with language set to English -->
 <html lang="en">
 <head>
     <!-- Character encoding declaration -->
@@ -22,7 +21,6 @@
         <div class="sidebar">
             <h3>Select a Topic</h3>
             <ul id="topic-list">
-                <!-- Each list item triggers fetchData() with the respective topic -->
                 <li onclick="fetchData('real_numbers')">Real Numbers</li>
                 <li onclick="fetchData('order_of_operations')">Order of Operations</li>
                 <li onclick="fetchData('absolute_value')">Absolute Value</li>
@@ -39,13 +37,9 @@
         <!-- Middle Column (Definition Display Area) -->
         <div class="definition-container">
             <h3>Definition</h3>
-            <!-- Area where the definition will be displayed -->
-            <p id="definition"></p>
-            <!-- Button to play the definition as audio -->
+            <p id="definition">Select a topic to see the definition.</p>
             <button id="play-audio" onclick="playDefinition()">🔊 Play Audio</button>
-            <!-- Button to stop the audio playback -->
             <button id="stop-audio" onclick="stopAudio()">⏹ Stop Audio</button>
-            <!-- Progress bar for tracking audio playback progress -->
             <div class="audio-progress-container">
                 <progress id="audio-progress" value="0" max="100"></progress>
                 <span id="audio-percentage">0%</span>
@@ -55,23 +49,37 @@
         <!-- Right Column (Chat Box) -->
         <div class="chat-container">
             <h3>Chat with Tutor</h3>
-            <!-- Area where chat messages appear -->
             <div class="chat-box" id="chatBox">
                 <div class="typing-indicator" id="typing" style="display: none;">Tutor is typing...</div>
             </div>
-            <!-- Input field and button for sending chat messages -->
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Ask your math question...">
+                <input type="text" id="chatInput" placeholder="Ask your math question..." onkeydown="if(event.key === 'Enter') sendMessage()">
                 <button onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
 
-    <!-- Include your existing JavaScript file -->
+    <!-- NoScript fallback -->
+    <noscript>
+        <p style="text-align:center; color:red;">JavaScript is required to use this application.</p>
+    </noscript>
+
+    <!-- Load JavaScript files -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <!-- Marked.js library for parsing Markdown content -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- MathJax library for rendering LaTeX mathematical expressions -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+    <!-- Ensure MathJax re-renders after dynamic content updates -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Monitor changes to the chat box and reprocess MathJax when needed
+            const chatBox = document.getElementById("chatBox");
+            const observer = new MutationObserver(() => {
+                MathJax.typesetPromise([chatBox]).catch((err) => console.error("MathJax error:", err));
+            });
+
+            observer.observe(chatBox, { childList: true });
+        });
+    </script>
 </body>
 </html>
