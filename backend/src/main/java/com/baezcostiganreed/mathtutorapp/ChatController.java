@@ -65,13 +65,13 @@ public class ChatController {
                 filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 15 && page_number <= 268 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 7 && page_number <= 9";
                 break;
             case "real numbers":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1130 && page_number <= 1144";
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1131 && page_number <= 1144";
                 break;
             case "signed numbers":
                 filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1145 && page_number <= 1220";
                 break;
             case "decimals":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 881";
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 828";
                 break;
             case "percents":
                 filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 848 && page_number <= 920";
@@ -99,7 +99,7 @@ public class ChatController {
                 chapterContent = "No documents provided \n";
             }
 
-           String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic, topic);
+           String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic, topic, topic, topic, topic,topic);
 
             OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("qwen2-math:7b-instruct")
                     .stream(false)
@@ -122,6 +122,7 @@ public class ChatController {
                     .build();
 
             return ollamaApi.chat(request).message().content();
+//            return topic;
 
         } catch (Exception e) {
             return "I'm sorry, I'm experiencing technical difficulties right now. Please try again later.";
