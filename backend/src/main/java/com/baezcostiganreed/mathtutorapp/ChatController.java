@@ -1,11 +1,9 @@
 package com.baezcostiganreed.mathtutorapp;
 
-import jakarta.annotation.PostConstruct;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,40 +12,33 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-
-
-
 
 /**
  * Provides REST endpoints to interact with a chat client.
  */
 @RestController
 public class ChatController {
-    private static final int TOP_K = 3;
+    private static final int TOP_K = 5;
     private static final double SIMILARITY_THRESHOLD = .6;
-    @Value("classpath:/prompts/prompt_template.txt")
-    private Resource systemResource;
     private SystemPromptTemplate systemPromptTemplate;
-    private final ChatClient chatClient;
+    private final OllamaApi ollamaApi = new OllamaApi("http://localhost:11434");
     private final PgVectorStore vectorStore;
 
-    /**
-     * Constructs a new controller with a chat client and a vector store.
-     *
-     * @param chatClientBuilder  builds and configures the ChatClient
-     * @param vectorStore        the vector store used for vector operations
-     */
-    public ChatController(ChatClient.Builder chatClientBuilder, PgVectorStore vectorStore) {
-        this.chatClient = chatClientBuilder.build();
-        this.vectorStore = vectorStore;
-    }
+    @Value("classpath:/prompts/prompt_template.txt")
+    private Resource systemTemplateResource;
 
-    @PostConstruct
-    public void init() {
-            this.systemPromptTemplate = new SystemPromptTemplate(systemResource);
+
+
+    /**
+     * Constructs a new controller with a vector store.
+     *
+     * @param vectorStore The vector store used for vector operations
+     */
+    public ChatController(PgVectorStore vectorStore) {
+        this.vectorStore = vectorStore;
     }
 
     /**
@@ -102,16 +93,35 @@ public class ChatController {
                             .build());
 
 
-            if (chapterResults != null) {
-                chapterContent = chapterResults.stream().map(Document::getText).collect(Collectors.joining(" CHAPTER DOCUMENT: "));
+            if (chapterResults != null && !chapterResults.isEmpty()) {
+                chapterContent = chapterResults.stream().map(Document::getText).collect(Collectors.joining("\n "));
             } else {
-                chapterContent = "";
+                chapterContent = "No documents provided \n";
             }
 
-            Message systemMessage = systemPromptTemplate.createMessage(Map.of("topic", topic, "usermessage", usermessage, "chapterContent", chapterContent));
-            Prompt prompt =  new Prompt(systemMessage);
-            return chatClient.prompt(prompt).call().content();
+           String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic, topic);
 
+            OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("qwen2-math:7b-instruct")
+                    .stream(false)
+                    .messages(List.of(
+                            OllamaApi.Message.builder(OllamaApi.Message.Role.SYSTEM)
+                                    .content(systemPrompt)
+                                    .build(),
+                            OllamaApi.Message.builder(OllamaApi.Message.Role.USER)
+                                    .content(usermessage)
+                                    .build(),
+                            OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL)
+                                    .content(chapterContent)
+                                    .build()))
+                    .options(OllamaOptions.builder()
+                            .temperature(0.2)
+                            .keepAlive("5")
+                            .numCtx(8000)
+                            .topP(0.9)
+                            .build())
+                    .build();
+
+            return ollamaApi.chat(request).message().content();
 
         } catch (Exception e) {
             return "I'm sorry, I'm experiencing technical difficulties right now. Please try again later.";
