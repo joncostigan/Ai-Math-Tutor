@@ -29,11 +29,13 @@ document.addEventListener("DOMContentLoaded", function () {
             definitionElement.innerText = "Definition not available.";
         }
     }
-
     async function fetchData(topic) {
         console.log("Fetching definition for:", topic);
         await fetchDefinition(topic);
+        window.currentTopic = topic; // Store the selected topic globally
     }
+
+
 
     function playDefinition() {
         const definitionText = document.getElementById("definition").innerText;
@@ -87,6 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     window.sendMessage = function() {
+        // Clear previous chat messages
+        chatBox.innerHTML = "";
+
         const userMessage = chatInput.value.trim();
         if (!userMessage) return;
 
@@ -94,15 +99,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const sanitizedUserMessage = sanitizeMathMessage(userMessage);
         displayMessage(sanitizedUserMessage, "user");
 
-        // Set the topic value. This could be dynamic based on user selection.
-        const topic = "linear equations";
+        // Retrieve the topic stored globally (set via topic selection)
+        const topic = window.currentTopic || "linear_equations";
 
         // Fetch chat response from the backend
         fetch(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`)
             .then(response => response.text())
             .then(data => {
                 console.log("API Response:", data);
-                // Sanitize the response from the backend
                 const sanitizedData = sanitizeMathMessage(data);
                 displayMessage(sanitizedData, "bot");
             })
@@ -113,6 +117,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         chatInput.value = "";
     };
+
+
 
     // Allow sending a message with the Enter key
     chatInput.addEventListener("keydown", function(event) {
