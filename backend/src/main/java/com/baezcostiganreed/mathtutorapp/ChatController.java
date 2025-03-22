@@ -1,7 +1,5 @@
 package com.baezcostiganreed.mathtutorapp;
 
-import org.springframework.ai.autoconfigure.chat.memory.cassandra.CassandraChatMemoryAutoConfiguration;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.api.OllamaApi;
@@ -10,11 +8,9 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
@@ -35,9 +31,6 @@ public class ChatController {
 
     @Value("classpath:/prompts/prompt_template.txt")
     private Resource systemTemplateResource;
-//    InMemoryChatMemory inMemoryChatMemory;
-//    inMemoryChatMemory = new InMemoryChatMemory();
-//    CassandraChatMemoryAutoConfiguration
 
 
 
@@ -127,20 +120,9 @@ public class ChatController {
                             .lowVRAM(true)
                             .temperature(.3)
                             .topP(.5)
-                            .numThread(24)
-                            .useMMap(true)
                             .build())
                     .build();
 
-//          return ollamaApi.chat(request).message().content();
-
-//            return this.ollamaApi.streamingChat(request)
-//                    .map(chatResponse -> ServerSentEvent.<String>builder()
-//                            .data(chatResponse.message().content())
-//                            .build())
-//                    .onErrorResume(e -> Flux.just(ServerSentEvent.<String>builder()
-//                            .data("Error: " + e.getMessage())
-//                            .build()));
             return this.ollamaApi.streamingChat(request);
 
         } catch (IOException e) {

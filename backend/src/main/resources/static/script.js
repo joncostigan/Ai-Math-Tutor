@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
         displayMessage(sanitizedUserMessage, "user");
 
         // Retrieve the topic stored globally (set via topic selection)
-        const topic = window.currentTopic;
+        const topic = window.currentTopic || "linear equations";
 
         const eventSource = new EventSource(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`);
         let botMessageElement = document.createElement("div");
