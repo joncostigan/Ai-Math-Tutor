@@ -73,7 +73,9 @@ public class ChatController {
             case "decimals":
                 filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 881";
                 break;
-         
+            case "percents":
+                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 848 && page_number <= 920";
+                break;
             case "polynomials":
                 filterExpressionChapter = "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 177 && page_number <= 205";
                 break;
