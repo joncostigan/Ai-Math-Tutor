@@ -118,8 +118,8 @@ public class ChatController {
                     .options(OllamaOptions.builder()
                             .numCtx(8000)
                             .lowVRAM(true)
-                            .temperature(.3)
-                            .topP(.5)
+                            .temperature(.25)
+                            .topP(.6)
                             .build())
                     .build();
 
