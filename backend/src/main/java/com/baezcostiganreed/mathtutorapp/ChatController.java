@@ -1,5 +1,7 @@
 package com.baezcostiganreed.mathtutorapp;
 
+import org.springframework.ai.autoconfigure.chat.memory.cassandra.CassandraChatMemoryAutoConfiguration;
+import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.api.OllamaApi;
@@ -8,10 +10,14 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +35,9 @@ public class ChatController {
 
     @Value("classpath:/prompts/prompt_template.txt")
     private Resource systemTemplateResource;
+//    InMemoryChatMemory inMemoryChatMemory;
+//    inMemoryChatMemory = new InMemoryChatMemory();
+//    CassandraChatMemoryAutoConfiguration
 
 
 
@@ -50,8 +59,8 @@ public class ChatController {
      * @return the chat client's response or an error message
      */
     @GetMapping("/chat")
-    public String chat(@RequestParam(value = "topic", defaultValue = "linear equations") String topic,
-                       @RequestParam(value = "usermessage", defaultValue = " ") String usermessage) {
+    public Flux<OllamaApi.ChatResponse> chat(@RequestParam(value = "topic", defaultValue = "linear equations") String topic,
+                                            @RequestParam(value = "usermessage", defaultValue = " ") String usermessage) {
         String filterExpressionChapter = "";
         String chapterContent = "";
         switch (topic) {
@@ -99,10 +108,10 @@ public class ChatController {
                 chapterContent = "No documents provided \n";
             }
 
-           String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic, topic, topic, topic, topic,topic);
+            String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic);
 
-            OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("qwen2-math:7b-instruct")
-                    .stream(false)
+            OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("phi4-mini")
+                    .stream(true)
                     .messages(List.of(
                             OllamaApi.Message.builder(OllamaApi.Message.Role.SYSTEM)
                                     .content(systemPrompt)
@@ -114,18 +123,32 @@ public class ChatController {
                                     .content(chapterContent)
                                     .build()))
                     .options(OllamaOptions.builder()
-                            .temperature(0.2)
-                            .keepAlive("5")
                             .numCtx(8000)
-                            .topP(0.9)
+                            .lowVRAM(true)
+                            .temperature(.3)
+                            .topP(.5)
+                            .numThread(24)
+                            .useMMap(true)
                             .build())
                     .build();
 
-            return ollamaApi.chat(request).message().content();
-//            return topic;
+//          return ollamaApi.chat(request).message().content();
 
+//            return this.ollamaApi.streamingChat(request)
+//                    .map(chatResponse -> ServerSentEvent.<String>builder()
+//                            .data(chatResponse.message().content())
+//                            .build())
+//                    .onErrorResume(e -> Flux.just(ServerSentEvent.<String>builder()
+//                            .data("Error: " + e.getMessage())
+//                            .build()));
+            return this.ollamaApi.streamingChat(request);
+
+        } catch (IOException e) {
+            // Handle the IOException from getContentAsString
+            return Flux.error(new RuntimeException("Error reading system prompt template: " + e.getMessage(), e));
         } catch (Exception e) {
-            return "I'm sorry, I'm experiencing technical difficulties right now. Please try again later.";
+            // Handle any other exceptions
+            return Flux.error(new RuntimeException("Error processing chat request: " + e.getMessage(), e));
         }
     }
 }

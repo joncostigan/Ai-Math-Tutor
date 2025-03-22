@@ -97,7 +97,7 @@ public class DocsETL {
         PdfDocumentReaderConfig config = createPdfDocumentReaderConfig();
         new TokenTextSplitter();
         TokenTextSplitter textSplitter = TokenTextSplitter.builder()
-                .withChunkSize(1500)
+//                .withChunkSize(1500)
                 .build();
         for (Resource pdfResource : pdfResources) {
             if (!isDocumentProcessed(pdfResource.getFilename())) {

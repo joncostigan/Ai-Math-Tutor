@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "factoring": "Breaking a number or expression into smaller parts."
         };
         // Format the topic key: lowercase and replace spaces with underscores
-        const formattedTopic = topic.toLowerCase().replace(/ /g, "_");
+        const formattedTopic = topic.toLowerCase();
         if (staticDefinitions[formattedTopic]) {
             definitionElement.innerText = staticDefinitions[formattedTopic];
         } else {
@@ -81,17 +81,13 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
     const chatInput = document.getElementById("chatInput");
     const chatBox = document.getElementById("chatBox");
+    const sendButton = document.getElementById("sendButton");
 
-    // Helper function to sanitize math delimiters:
-    // Converts block math delimiters (\[...\]) into inline math (\(...\))
     function sanitizeMathMessage(text) {
         return text.replace(/\\\[(.*?)\\\]/g, "\\($1\\)");
     }
 
     window.sendMessage = function() {
-        // Clear previous chat messages
-        chatBox.innerHTML = "";
-
         const userMessage = chatInput.value.trim();
         if (!userMessage) return;
 
@@ -102,23 +98,44 @@ document.addEventListener("DOMContentLoaded", function () {
         // Retrieve the topic stored globally (set via topic selection)
         const topic = window.currentTopic;
 
-        // Fetch chat response from the backend
-        fetch(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`)
-            .then(response => response.text())
-            .then(data => {
-                console.log("API Response:", data);
-                const sanitizedData = sanitizeMathMessage(data);
-                displayMessage(sanitizedData, "bot");
-            })
-            .catch(error => {
-                console.error("Fetch error:", error);
+        const eventSource = new EventSource(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`);
+        let botMessageElement = document.createElement("div");
+        botMessageElement.classList.add("message", "bot");
+        chatBox.appendChild(botMessageElement);
+
+        // Use a complete message container
+        const messageElement = document.createElement("span");
+        botMessageElement.appendChild(messageElement);
+
+        let fullMessage = "";
+
+        eventSource.onmessage = function(event) {
+            try {
+                const response = JSON.parse(event.data);
+                const content = response.message?.content || "";
+                fullMessage += content;
+                messageElement.innerHTML = fullMessage;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise([messageElement]).catch((err) => console.log(err.message));
+                }
+            } catch (error) {
+                console.error("Error parsing response:", error);
+                console.log("Raw data:", event.data);
+            }
+        };
+
+        eventSource.onerror = function(event) {
+            console.error("EventSource failed:", event);
+            if (fullMessage.length === 0) {
                 displayMessage("Error: Could not fetch response.", "bot");
-            });
+            }
+            eventSource.close();
+        };
 
         chatInput.value = "";
     };
-
-
 
     // Allow sending a message with the Enter key
     chatInput.addEventListener("keydown", function(event) {
@@ -127,6 +144,12 @@ document.addEventListener("DOMContentLoaded", function () {
             sendMessage();
         }
     });
+
+    if (sendButton) {
+        sendButton.addEventListener("click", function() {
+            sendMessage();
+        });
+    }
 
     function displayMessage(message, sender) {
         const messageElement = document.createElement("div");
