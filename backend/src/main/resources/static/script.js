@@ -1,20 +1,17 @@
 // Wait until the entire HTML document has been loaded and parsed
 // Updated to include clearChat globally
 
-document.addEventListener("DOMContentLoaded", function () { // Runs the code only after the full page loads
-    console.log("DOM fully loaded and ready"); // Confirms the document is ready in the browser console
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM fully loaded and ready");
 
     // Function to fetch and display static definitions
-    async function fetchDefinition(topic) { // Declares an async function to get definition based on topic
-        console.log("Fetching definition for:", topic); // Logs the topic to be fetched
-
-        const definitionElement = document.getElementById("definition"); // Gets the paragraph element for showing the definition
-        if (!definitionElement) { // Checks if the definition element exists
-            console.error("❌ Error: Element with ID 'definition' not found."); // Logs error if not found
-            return; // Stops the function
+    async function fetchDefinition(topic) {
+        console.log("Fetching definition for:", topic);
+        const definitionElement = document.getElementById("definition");
+        if (!definitionElement) {
+            console.error("❌ Error: Element with ID 'definition' not found.");
+            return;
         }
-
-        // Predefined dictionary of topics and their definitions
         const staticDefinitions = {
             "integers": "Numbers without fractions or decimals, like -3, 0, or 7.",
             "fractions": "A way to show parts of a whole, written with a top and bottom number.",
@@ -27,79 +24,163 @@ document.addEventListener("DOMContentLoaded", function () { // Runs the code onl
             "factoring": "Rewriting a number or expression as a product of its smaller parts or factors."
         };
 
-        const formattedTopic = topic.toLowerCase(); // Converts the topic to lowercase for consistent lookup
-
-        if (staticDefinitions[formattedTopic]) { // If the topic is found in the dictionary
-            definitionElement.innerText = staticDefinitions[formattedTopic]; // Show the matching definition
+        const formattedTopic = topic.toLowerCase();
+        if (staticDefinitions[formattedTopic]) {
+            definitionElement.innerText = staticDefinitions[formattedTopic];
         } else {
-            definitionElement.innerText = "Definition not available."; // Show fallback text if not found
+            definitionElement.innerText = "Definition not available.";
         }
     }
 
-    async function fetchData(topic) { // Handles clicking on a topic
-        console.log("Fetching definition for:", topic); // Logs the topic
-
-        await fetchDefinition(topic); // Calls the function to fetch its definition
-        window.currentTopic = topic; // Saves the topic globally for use in chat
-
-        const listItems = document.querySelectorAll('#topic-list li'); // Gets all list items (topics)
-        listItems.forEach(item => item.classList.remove('selected')); // Removes highlight from all topics
-
-        const clickedItem = Array.from(listItems).find(li => li.textContent.trim().toLowerCase() === topic.toLowerCase()); // Finds the clicked item
+    async function fetchData(topic) {
+        console.log("Fetching definition for:", topic);
+        await fetchDefinition(topic);
+        window.currentTopic = topic;
+        const listItems = document.querySelectorAll('#topic-list li');
+        listItems.forEach(item => item.classList.remove('selected'));
+        const clickedItem = Array.from(listItems).find(li => li.textContent.trim().toLowerCase() === topic.toLowerCase());
         if (clickedItem) {
-            clickedItem.classList.add('selected'); // Highlights the selected item
+            clickedItem.classList.add('selected');
         }
     }
 
-    function playDefinition() { // Speaks the definition aloud
-        const definitionText = document.getElementById("definition").innerText; // Gets the current definition
-
-        if (!definitionText || definitionText === "Select a topic to see the definition.") { // Guard clause if empty
-            alert("❌ No definition available to read."); // Alert user
-            return; // Exit
+    function playDefinition() {
+        const definitionText = document.getElementById("definition").innerText;
+        if (!definitionText || definitionText === "Select a topic to see the definition.") {
+            alert("❌ No definition available to read.");
+            return;
         }
-
-        stopAudio(); // Stop any currently playing audio
-
-        let speechSynthesisUtterance = new SpeechSynthesisUtterance(definitionText); // Create a speech object
-        let totalLength = definitionText.split(" ").length; // Count words in definition
-        let wordsSpoken = 0; // Initialize spoken word counter
-
-        let speakingInterval = setInterval(() => { // Set up simulated progress updates every 0.5s
-            wordsSpoken++; // Increment
-            let progress = Math.min((wordsSpoken / totalLength) * 100, 100); // Calculate percent done
-            document.getElementById("audio-progress").value = progress; // Update progress bar
-            document.getElementById("audio-percentage").innerText = Math.round(progress) + "%"; // Update percent label
+        stopAudio();
+        let speechSynthesisUtterance = new SpeechSynthesisUtterance(definitionText);
+        let totalLength = definitionText.split(" ").length;
+        let wordsSpoken = 0;
+        let speakingInterval = setInterval(() => {
+            wordsSpoken++;
+            let progress = Math.min((wordsSpoken / totalLength) * 100, 100);
+            document.getElementById("audio-progress").value = progress;
+            document.getElementById("audio-percentage").innerText = Math.round(progress) + "%";
         }, 500);
-
-        speechSynthesisUtterance.onstart = () => { // When speech starts
-            document.getElementById("audio-progress").value = 0; // Reset progress bar
-            document.getElementById("audio-percentage").innerText = "0%"; // Reset label
+        speechSynthesisUtterance.onstart = () => {
+            document.getElementById("audio-progress").value = 0;
+            document.getElementById("audio-percentage").innerText = "0%";
         };
-
-        speechSynthesisUtterance.onend = () => { // When speech ends
-            clearInterval(speakingInterval); // Stop interval
-            document.getElementById("audio-progress").value = 100; // Fill bar
-            document.getElementById("audio-percentage").innerText = "100%"; // Final label
+        speechSynthesisUtterance.onend = () => {
+            clearInterval(speakingInterval);
+            document.getElementById("audio-progress").value = 100;
+            document.getElementById("audio-percentage").innerText = "100%";
         };
-
-        window.speechSynthesis.speak(speechSynthesisUtterance); // Start speaking
+        window.speechSynthesis.speak(speechSynthesisUtterance);
     }
 
-    function stopAudio() { // Stops any speaking voice
-        window.speechSynthesis.cancel(); // Stops audio
-        document.getElementById("audio-progress").value = 0; // Reset progress
-        document.getElementById("audio-percentage").innerText = "0%"; // Reset label
+    function stopAudio() {
+        window.speechSynthesis.cancel();
+        document.getElementById("audio-progress").value = 0;
+        document.getElementById("audio-percentage").innerText = "0%";
     }
 
-    function clearChat() { // Clears chat messages
-        const chatBox = document.getElementById('chatBox'); // Select chat box
-        chatBox.innerHTML = ''; // Remove all inner content
+    function clearChat() {
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML = '';
     }
 
-    // Make these functions available to HTML buttons using onclick=""
+    // Make these functions globally available for HTML onClick
     window.fetchData = fetchData;
     window.playDefinition = playDefinition;
     window.stopAudio = stopAudio;
     window.clearChat = clearChat;
+});
+
+// Chat functionality and Markdown fixes
+// Kept separate DOMContentLoaded for modularity
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Grab references to chat-related elements
+    const chatInput = document.getElementById("chatInput");
+    const chatBox = document.getElementById("chatBox");
+    // IMPORTANT: new ID for the Send button
+    const sendButton = document.getElementById("sendButton");
+
+    // Simple function to sanitize user text for math
+    function sanitizeMathMessage(text) {
+        return text.replace(/\\\[(.*?)\\\]/g, "\\($1\\)");
+    }
+
+    // Make sendMessage globally available if you also do onclick in HTML
+    window.sendMessage = function () {
+        const userMessage = chatInput.value.trim();
+        if (!userMessage) return;
+
+        const sanitizedUserMessage = sanitizeMathMessage(userMessage);
+        displayMessage(sanitizedUserMessage, "user");
+
+        // Grab the selected topic or default to 'linear equations'
+        const topic = window.currentTopic || "linear equations";
+        const eventSource = new EventSource(`/chat?topic=${encodeURIComponent(topic)}&usermessage=${encodeURIComponent(userMessage)}`);
+
+        let botMessageElement = document.createElement("div");
+        botMessageElement.classList.add("message", "bot");
+        chatBox.appendChild(botMessageElement);
+
+        const messageElement = document.createElement("span");
+        botMessageElement.appendChild(messageElement);
+
+        let fullMessage = "";
+
+        eventSource.onmessage = function (event) {
+            try {
+                const response = JSON.parse(event.data);
+                const content = response.message?.content || "";
+                fullMessage += content;
+                messageElement.innerHTML = fullMessage;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Rerender math if MathJax is loaded
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise([messageElement]).catch((err) => console.log(err.message));
+                }
+            } catch (error) {
+                console.error("Error parsing response:", error);
+                console.log("Raw data:", event.data);
+            }
+        };
+
+        eventSource.onerror = function (event) {
+            console.error("EventSource failed:", event);
+            if (fullMessage.length === 0) {
+                displayMessage("Error: Could not fetch response.", "bot");
+            }
+            eventSource.close();
+        };
+
+        chatInput.value = "";
+    };
+
+    // Send message when pressing Enter in the chat input
+    chatInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Send message when clicking the new Send button
+    if (sendButton) {
+        sendButton.addEventListener("click", function () {
+            sendMessage();
+        });
+    }
+
+    // Helper function to display a message in the chat box
+    function displayMessage(message, sender) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", sender);
+        messageElement.innerHTML = message;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Re-typeset if MathJax is loaded
+        if (window.MathJax) {
+            window.MathJax.typeset();
+        }
+    }
 });
