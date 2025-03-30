@@ -13,123 +13,109 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * Provides REST endpoints to interact with a chat client.
- */
 @RestController
 public class ChatController {
-    private static final int TOP_K = 5;
+    private static final int TOP_K = 3;
     private static final double SIMILARITY_THRESHOLD = .6;
-    private SystemPromptTemplate systemPromptTemplate;
+    private static final int MAX_HISTORY = 10;
+
     private final OllamaApi ollamaApi = new OllamaApi("http://localhost:11434");
     private final PgVectorStore vectorStore;
+
+    private static final Map<String, Deque<OllamaApi.Message>> sessionHistory = new ConcurrentHashMap<>();
+    private final Map<String, List<Document>> vectorCache = new ConcurrentHashMap<>();
 
     @Value("classpath:/prompts/prompt_template.txt")
     private Resource systemTemplateResource;
 
+    private String systemPromptTemplate;
 
-
-    /**
-     * Constructs a new controller with a vector store.
-     *
-     * @param vectorStore The vector store used for vector operations
-     */
     public ChatController(PgVectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
 
-    /**
-     * Handles GET requests with an optional user message.
-     * Sends the user message to the chat client and returns the chat response.
-     *
-     * @param topic  the desired math topic of the chat
-     * @param usermessage  the text provided by the user
-     * @return the chat client's response or an error message
-     */
+    @PostConstruct
+    public void loadSystemPrompt() throws IOException {
+        this.systemPromptTemplate = systemTemplateResource.getContentAsString(Charset.defaultCharset());
+    }
+
     @GetMapping("/chat")
-    public Flux<OllamaApi.ChatResponse> chat(@RequestParam(value = "topic", defaultValue = "linear equations") String topic,
-                                            @RequestParam(value = "usermessage", defaultValue = " ") String usermessage) {
-        String filterExpressionChapter = "";
-        String chapterContent = "";
-        switch (topic) {
-            case "linear equations":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1249 && page_number <= 1357 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 28 && page_number <= 79";
-                break;
-            case "fractions":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 400 && page_number <= 645 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 12 && page_number <= 17";
-                break;
-            case "integers":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 15 && page_number <= 268 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 7 && page_number <= 9";
-                break;
-            case "real numbers":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1131 && page_number <= 1144";
-                break;
-            case "signed numbers":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1145 && page_number <= 1220";
-                break;
-            case "decimals":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 828";
-                break;
-            case "percents":
-                filterExpressionChapter = "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 848 && page_number <= 920";
-                break;
-            case "polynomials":
-                filterExpressionChapter = "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 177 && page_number <= 205";
-                break;
-            case "factoring":
-                filterExpressionChapter = "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 212 && page_number <= 237";
-                break;
+    public Flux<OllamaApi.ChatResponse> chat(
+            @RequestParam(value = "topic", defaultValue = "") String topic,
+            @RequestParam(value = "usermessage", defaultValue = " ") String usermessage,
+            @RequestParam(value = "sessionId", defaultValue = "default") String sessionId
+    ) {
+        if (topic == null || topic.trim().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("Please select a topic"));
         }
-        try {
-            List<Document> chapterResults = vectorStore.similaritySearch(
-                    SearchRequest.builder()
-                            .query("Steps to find the solution. How to Solve. " + topic + " " + usermessage)
-                            .topK(TOP_K)
-                            .similarityThreshold(SIMILARITY_THRESHOLD)
-                            .filterExpression(filterExpressionChapter)
-                            .build());
 
+        String filterExpressionChapter = switch (topic) {
+            case "linear equations" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1249 && page_number <= 1357 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 28 && page_number <= 79";
+            case "fractions" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 400 && page_number <= 645 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 12 && page_number <= 17";
+            case "integers" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 15 && page_number <= 268 || file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 7 && page_number <= 9";
+            case "real numbers" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1131 && page_number <= 1144";
+            case "signed numbers" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 1145 && page_number <= 1220";
+            case "decimals" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 663 && page_number <= 828";
+            case "percents" ->
+                    "file_name == 'fundamentals-of-mathematics.pdf' && page_number >= 848 && page_number <= 920";
+            case "polynomials" ->
+                    "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 177 && page_number <= 205";
+            case "factoring" ->
+                    "file_name == 'Beginning_and_Intermediate_Algebra.pdf' && page_number >= 212 && page_number <= 237";
+            default -> "";
+        };
 
-            if (chapterResults != null && !chapterResults.isEmpty()) {
-                chapterContent = chapterResults.stream().map(Document::getText).collect(Collectors.joining("\n "));
-            } else {
-                chapterContent = "No documents provided \n";
-            }
+        String cacheKey = String.join("::", topic.trim(), usermessage.trim()).toLowerCase();
+        List<Document> chapterResults = vectorCache.computeIfAbsent(cacheKey, key ->
+                vectorStore.similaritySearch(
+                        SearchRequest.builder()
+                                .query("Steps to find the solution. How to Solve. " + topic + " " + usermessage)
+                                .topK(TOP_K)
+                                .similarityThreshold(SIMILARITY_THRESHOLD)
+                                .filterExpression(filterExpressionChapter)
+                                .build()));
 
-            String systemPrompt = String.format(systemTemplateResource.getContentAsString(Charset.defaultCharset()), topic);
+        String chapterContent = chapterResults != null && !chapterResults.isEmpty()
+                ? chapterResults.stream().map(Document::getText).collect(Collectors.joining("\n "))
+                : "No documents provided\n";
 
-            OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("phi4-mini")
-                    .stream(true)
-                    .messages(List.of(
-                            OllamaApi.Message.builder(OllamaApi.Message.Role.SYSTEM)
-                                    .content(systemPrompt)
-                                    .build(),
-                            OllamaApi.Message.builder(OllamaApi.Message.Role.USER)
-                                    .content(usermessage)
-                                    .build(),
-                            OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL)
-                                    .content(chapterContent)
-                                    .build()))
-                    .options(OllamaOptions.builder()
-                            .numCtx(8000)
-                            .temperature(.25)
-                            .topP(.6)
-                            .build())
-                    .build();
+        String systemPrompt = String.format(systemPromptTemplate, topic);
 
-            return this.ollamaApi.streamingChat(request);
+        Deque<OllamaApi.Message> history = sessionHistory.computeIfAbsent(sessionId, k -> new ArrayDeque<>());
+        history.add(OllamaApi.Message.builder(OllamaApi.Message.Role.USER).content(usermessage).build());
+        history.add(OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL).content(chapterContent).build());
 
-        } catch (IOException e) {
-            // Handle the IOException from getContentAsString
-            return Flux.error(new RuntimeException("Error reading system prompt template: " + e.getMessage(), e));
-        } catch (Exception e) {
-            // Handle any other exceptions
-            return Flux.error(new RuntimeException("Error processing chat request: " + e.getMessage(), e));
+        while (history.size() > MAX_HISTORY * 2) {
+            history.pollFirst();
         }
+
+        List<OllamaApi.Message> messages = new ArrayList<>();
+        messages.add(OllamaApi.Message.builder(OllamaApi.Message.Role.SYSTEM).content(systemPrompt).build());
+        messages.addAll(history);
+
+        OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("phi4-mini")
+                .stream(true)
+                .messages(messages)
+                .options(OllamaOptions.builder()
+                        .numCtx(4000)
+                        .temperature(.2)
+                        .topP(.4)
+                        .build())
+                .build();
+
+        return this.ollamaApi.streamingChat(request);
     }
 }
