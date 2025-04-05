@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Math Tutor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link to CSS file in the same folder -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- Main container holding all webpage content -->
+<div class="container">
+
+    <!-- Page title -->
+    <h1 class="page-title">Math Tutor</h1>
+
+    <!-- Left Column (Sidebar with list of topics) -->
+    <div class="sidebar">
+        <h3>Select a Topic</h3>
+        <ul id="topic-list">
+            <li onclick="fetchData('integers')">Integers</li>
+            <li onclick="fetchData('fractions')">Fractions</li>
+            <li onclick="fetchData('decimals')">Decimals</li>
+            <li onclick="fetchData('percents')">Percents</li>
+            <li onclick="fetchData('real numbers')">Real Numbers</li>
+            <li onclick="fetchData('signed numbers')">Signed Numbers</li>
+            <li onclick="fetchData('linear equations')">Linear Equations</li>
+            <li onclick="fetchData('polynomials')">Polynomials</li>
+            <li onclick="fetchData('factoring')">Factoring</li>
+        </ul>
+    </div>
+
+    <!-- Middle Column (Definition Display Area) -->
+    <div class="definition-container">
+        <h3>Definition</h3>
+        <p id="definition">Select a topic to see the definition.</p>
+        <button id="play-audio" onclick="playDefinition()">🔊 Play Audio</button>
+        <button id="stop-audio" onclick="stopAudio()">⏹ Stop Audio</button>
+        <!-- Progress bar for tracking audio playback progress -->
+        <div class="audio-progress-container">
+            <progress id="audio-progress" value="0" max="100"></progress>
+            <span id="audio-percentage">0%</span>
+        </div>
+    </div>
+
+    <!-- Right Column (Chat Box) -->
+    <div class="chat-container">
+        <h3>Chat with Tutor</h3>
+        <div class="chat-box" id="chatBox">
+            <div class="typing-indicator" id="typing" style="display: none;">
+                Tutor is typing...
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Ask your math question...">
+            <!-- Note: We removed the onclick here and replaced it with an EventListener in script.js -->
+            <button id="sendButton" class="">Send</button>
+            <button onclick="clearChat()">Clear Chat</button>
+        </div>
+    </div>
+</div>
+
+<!-- Link to JavaScript file in the same folder -->
+<script src="script.js"></script>
+<!-- (Optional) Marked.js for parsing Markdown content -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- MathJax for rendering LaTeX mathematical expressions -->
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</body>
+</html>
