@@ -93,14 +93,6 @@ button {
     transition: background 0.2s; /* Smooth background change */
 }
 
-button:disabled {
-    background-color: #ccc !important;
-    color: #666 !important;
-    cursor: not-allowed !important;
-    opacity: 0.6;
-}
-
-
 button:hover {
     background-color: #1976d2; /* Darker blue on hover */
 }

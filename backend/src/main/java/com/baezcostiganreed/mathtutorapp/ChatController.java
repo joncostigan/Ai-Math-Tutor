@@ -19,12 +19,13 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
 public class ChatController {
     private static final int TOP_K = 3;
     private static final double SIMILARITY_THRESHOLD = .6;
-    private static final int MAX_HISTORY = 10;
+    private static final int MAX_HISTORY = 5;
 
     private final OllamaApi ollamaApi = new OllamaApi("http://localhost:11434");
     private final PgVectorStore vectorStore;
@@ -88,15 +89,18 @@ public class ChatController {
                                 .filterExpression(filterExpressionChapter)
                                 .build()));
 
+
         String chapterContent = chapterResults != null && !chapterResults.isEmpty()
-                ? chapterResults.stream().map(Document::getText).collect(Collectors.joining("\n "))
+                ? IntStream.range(0, chapterResults.size())
+                .mapToObj(i -> "Document " + (i + 1) + ": " + chapterResults.get(i).getText())
+                .collect(Collectors.joining("\n "))
                 : "No documents provided\n";
 
-        String systemPrompt = String.format(systemPromptTemplate, topic);
+
+        String systemPrompt = String.format(systemPromptTemplate, topic, topic);
 
         Deque<OllamaApi.Message> history = sessionHistory.computeIfAbsent(sessionId, k -> new ArrayDeque<>());
         history.add(OllamaApi.Message.builder(OllamaApi.Message.Role.USER).content(usermessage).build());
-        history.add(OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL).content(chapterContent).build());
 
         while (history.size() > MAX_HISTORY * 2) {
             history.pollFirst();
@@ -104,18 +108,36 @@ public class ChatController {
 
         List<OllamaApi.Message> messages = new ArrayList<>();
         messages.add(OllamaApi.Message.builder(OllamaApi.Message.Role.SYSTEM).content(systemPrompt).build());
+        messages.add(OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL).content(chapterContent).build());
         messages.addAll(history);
+
 
         OllamaApi.ChatRequest request = OllamaApi.ChatRequest.builder("phi4-mini")
                 .stream(true)
                 .messages(messages)
                 .options(OllamaOptions.builder()
-                        .numCtx(4000)
-                        .temperature(.2)
-                        .topP(.4)
+                        .numCtx(16000)
+                        .temperature(.3)
+                        .topP(.9)
+                        .keepAlive("5")
+                        .numPredict(250)
                         .build())
+
                 .build();
 
-        return this.ollamaApi.streamingChat(request);
+        StringBuilder assistantMessageBuilder = new StringBuilder();
+
+        return this.ollamaApi.streamingChat(request)
+                .doOnNext(chatResponse -> {
+                    assistantMessageBuilder.append(chatResponse.message().content());
+                })
+                .doOnComplete(() -> {
+                    history.add(OllamaApi.Message.builder(OllamaApi.Message.Role.ASSISTANT)
+                            .content(assistantMessageBuilder.toString())
+                            .build());
+                    while (history.size() > MAX_HISTORY * 2) {
+                        history.pollFirst();
+                    }
+                });
     }
 }

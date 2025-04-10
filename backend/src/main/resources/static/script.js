@@ -1,6 +1,25 @@
 // Wait until the entire HTML document has been loaded and parsed
 // Updated to include clearChat globally
 
+const synth = window.speechSynthesis;
+let voices;
+let currentUtterance;
+
+function loadVoices() {
+    voices = synth.getVoices();
+}
+
+
+if ("onvoiceschanged" in synth) {
+    synth.onvoiceschanged = loadVoices;
+} else {
+    loadVoices();
+}
+
+
+
+
+
 document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM fully loaded and ready");
 
@@ -83,12 +102,23 @@ document.addEventListener("DOMContentLoaded", function () {
         chatBox.innerHTML = '';
     }
 
+
+
     // Make these functions globally available for HTML onClick
     window.fetchData = fetchData;
     window.playDefinition = playDefinition;
     window.stopAudio = stopAudio;
     window.clearChat = clearChat;
+
 });
+
+function playAssistantMessage(assistantMessage) {
+    currentUtterance = new SpeechSynthesisUtterance(assistantMessage);
+    currentUtterance.voice = voices[6];
+    synth.speak(currentUtterance);
+}
+
+
 
 // Chat functionality and Markdown fixes
 // Kept separate DOMContentLoaded for modularity
@@ -102,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Simple function to sanitize user text for math
     function sanitizeMathMessage(text) {
-        return text.replace(/\\\[(.*?)\\\]/g, "\\($1\\)");
+        return text.replace(/\\\[(.*?)\\]/gs, "\\($1\\)");
     }
 
     // Make sendMessage globally available if you also do onclick in HTML
@@ -138,11 +168,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (window.MathJax) {
                     window.MathJax.typesetPromise([messageElement]).catch((err) => console.log(err.message));
                 }
+                if (response.done) {
+                    playAssistantMessage(sanitizeMathMessage(fullMessage));
+                }
             } catch (error) {
                 console.error("Error parsing response:", error);
                 console.log("Raw data:", event.data);
             }
         };
+
+
 
         eventSource.onerror = function (event) {
             console.error("EventSource failed:", event);
