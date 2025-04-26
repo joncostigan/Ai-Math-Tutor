@@ -115,6 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function playAssistantMessage(assistantMessage) {
     currentUtterance = new SpeechSynthesisUtterance(assistantMessage);
     currentUtterance.voice = voices[6];
+    currentUtterance.rate = 0.95;
     synth.speak(currentUtterance);
 }
 

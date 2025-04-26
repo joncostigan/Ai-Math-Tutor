@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * A component responsible for extracting text from PDF documents,
- * transforming the text by chinking it and creating vector embeddings,
+ * transforming the text by chunking it and creating vector embeddings,
  * and storing the vector embeddings in a database.
  */
 @Component

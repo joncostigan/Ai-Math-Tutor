@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"com.baezcostiganreed.mathtutorapp","l":"ChatController"},{"p":"com.baezcostiganreed.mathtutorapp","l":"DocsETL"},{"p":"com.baezcostiganreed.mathtutorapp","l":"MathTutorAppApplication"}];updateSearchResults();

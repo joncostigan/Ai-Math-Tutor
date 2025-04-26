@@ -1,6 +1,5 @@
 package com.baezcostiganreed.mathtutorapp;
 
-import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaOptions;
@@ -21,6 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
+/**
+ * ChatController handles chat requests and manages the interaction with the Ollama API.
+ * It retrieves relevant documents from the vector store based on user input and filters the similarity search by metadata.
+ * It maintains chat history and calls the Ollama Api.
+ */
 @RestController
 public class ChatController {
     private static final int TOP_K = 3;
@@ -140,4 +145,8 @@ public class ChatController {
                     }
                 });
     }
+
+
 }
+
+
