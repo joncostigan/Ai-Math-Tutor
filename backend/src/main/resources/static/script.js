@@ -5,6 +5,9 @@ const synth = window.speechSynthesis;
 let voices;
 let currentUtterance;
 
+/**
+ * Loads the available voices for speech synthesis.
+ */
 function loadVoices() {
     voices = synth.getVoices();
 }
@@ -23,7 +26,10 @@ if ("onvoiceschanged" in synth) {
 document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM fully loaded and ready");
 
-    // Function to fetch and display static definitions
+    /**
+     * Fetches and displays a static definition for a given topic.
+     * @param {string} topic - The topic for which the definition is fetched.
+     */
     async function fetchDefinition(topic) {
         console.log("Fetching definition for:", topic);
         const definitionElement = document.getElementById("definition");
@@ -51,6 +57,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    /**
+     * Fetches data for a given topic and updates the UI.
+     * @param {string} topic - The topic to fetch data for.
+     */
     async function fetchData(topic) {
         console.log("Fetching definition for:", topic);
         await fetchDefinition(topic);
@@ -63,6 +73,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    /**
+     * Plays the definition of the current topic using speech synthesis.
+     */
     function playDefinition() {
         const definitionText = document.getElementById("definition").innerText;
         if (!definitionText || definitionText === "Select a topic to see the definition.") {
@@ -91,12 +104,18 @@ document.addEventListener("DOMContentLoaded", function () {
         window.speechSynthesis.speak(speechSynthesisUtterance);
     }
 
+    /**
+     * Stops any ongoing speech synthesis and resets the progress indicators.
+     */
     function stopAudio() {
         window.speechSynthesis.cancel();
         document.getElementById("audio-progress").value = 0;
         document.getElementById("audio-percentage").innerText = "0%";
     }
 
+    /**
+     * Clears the chat box by removing all its content.
+     */
     function clearChat() {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = '';
@@ -112,6 +131,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+/**
+ * Plays a given assistant message using speech synthesis.
+ * @param {string} assistantMessage - The message to be spoken by the assistant.
+ */
 function playAssistantMessage(assistantMessage) {
     currentUtterance = new SpeechSynthesisUtterance(assistantMessage);
     currentUtterance.voice = voices[6];
@@ -130,13 +153,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const chatBox = document.getElementById("chatBox");
     // IMPORTANT: new ID for the Send button
     const sendButton = document.getElementById("sendButton");
-
-    // Simple function to sanitize user text for math
+    
+    /**
+     * Sanitizes user input to replace math delimiters for proper rendering.
+     * @param {string} text - The user input text to sanitize.
+     * @returns {string} - The sanitized text.
+     */
     function sanitizeMathMessage(text) {
         return text.replace(/\\\[(.*?)\\]/gs, "\\($1\\)");
     }
 
-    // Make sendMessage globally available if you also do onclick in HTML
+    /**
+     * Sends a message to the backend and processes the response.
+     */
     window.sendMessage = function () {
         const userMessage = chatInput.value.trim();
         if (!userMessage) return;
@@ -199,14 +228,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Send message when clicking the new Send button
+    // Attach click event listener to the Send button
     if (sendButton) {
         sendButton.addEventListener("click", function () {
             sendMessage();
         });
     }
 
-    // Helper function to display a message in the chat box
+    /**
+     * Displays a message in the chat box.
+     * @param {string} message - The message content to display.
+     * @param {string} sender - The sender of the message ("user" or "bot").
+     */
     function displayMessage(message, sender) {
         const messageElement = document.createElement("div");
         messageElement.classList.add("message", sender);
