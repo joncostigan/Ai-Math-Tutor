@@ -14,7 +14,7 @@ The study focuses on leveraging Generative AI to develop a system that provides 
 
 ## Setup Instructions
 
-👉 [Click here to view the full setup guide](docs/SETUP_GUIDE.md)
+[Click here to view the full setup guide](Docs/SETUP_GUIDE.md)
 
 
 References:
